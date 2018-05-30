@@ -3899,11 +3899,17 @@ cmd_form(ProfWin *window, const char *const command, gchar **args)
     }
 
     if (g_strcmp0(args[0], "submit") == 0) {
-        iq_submit_room_config(confwin->roomjid, confwin->form);
+        if (confwin->submit == NULL) {
+            /* TODO */
+        }
+        confwin->submit(confwin);
     }
 
     if (g_strcmp0(args[0], "cancel") == 0) {
-        iq_room_config_cancel(confwin->roomjid);
+        if (confwin->cancel == NULL) {
+            /* TODO */
+        }
+        confwin->cancel(confwin);
     }
 
     if ((g_strcmp0(args[0], "submit") == 0) || (g_strcmp0(args[0], "cancel") == 0)) {

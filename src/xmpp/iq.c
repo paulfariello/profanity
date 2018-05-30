@@ -586,10 +586,10 @@ iq_request_room_config_form(const char *const room_jid)
 }
 
 void
-iq_submit_room_config(const char *const room, DataForm *form)
+iq_submit_room_config(ProfConfWin *confwin)
 {
     xmpp_ctx_t * const ctx = connection_get_ctx();
-    xmpp_stanza_t *iq = stanza_create_room_config_submit_iq(ctx, room, form);
+    xmpp_stanza_t *iq = stanza_create_room_config_submit_iq(ctx, confwin->roomjid, confwin->form);
 
     const char *id = xmpp_stanza_get_id(iq);
     iq_id_handler_add(id, _room_config_submit_id_handler, NULL, NULL);
@@ -599,10 +599,10 @@ iq_submit_room_config(const char *const room, DataForm *form)
 }
 
 void
-iq_room_config_cancel(const char *const room_jid)
+iq_room_config_cancel(ProfConfWin *confwin)
 {
     xmpp_ctx_t * const ctx = connection_get_ctx();
-    xmpp_stanza_t *iq = stanza_create_room_config_cancel_iq(ctx, room_jid);
+    xmpp_stanza_t *iq = stanza_create_room_config_cancel_iq(ctx, confwin->roomjid);
     iq_send_stanza(iq);
     xmpp_stanza_release(iq);
 }
@@ -1152,7 +1152,7 @@ _command_exec_response_handler(xmpp_stanza_t *const stanza, void *const userdata
         }
 
         DataForm *form = form_create(x);
-        ProfConfWin *confwin = (ProfConfWin*)wins_new_config(from, form);
+        ProfConfWin *confwin = (ProfConfWin*)wins_new_config(from, form, NULL, NULL);
         confwin_handle_configuration(confwin, form);
     }
 
@@ -1693,7 +1693,7 @@ _room_config_id_handler(xmpp_stanza_t *const stanza, void *const userdata)
     }
 
     DataForm *form = form_create(x);
-    ProfConfWin *confwin = (ProfConfWin*)wins_new_config(from, form);
+    ProfConfWin *confwin = (ProfConfWin*)wins_new_config(from, form, iq_submit_room_config, iq_room_config_cancel);
     confwin_handle_configuration(confwin, form);
 
     return 0;
