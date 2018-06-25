@@ -1772,10 +1772,19 @@ win_handle_command_list(ProfWin *window, GSList *cmds)
 }
 
 void
-win_handle_command_exec_status(ProfWin *window, const char *const command, const char *const value)
+win_handle_command_exec_status(ProfWin *window, const char *const command, const char *const value, GList *actions)
 {
     assert(window != NULL);
     win_println(window, THEME_DEFAULT, '!', "%s %s", command, value);
+    if (actions) {
+        GList *curr = actions;
+
+        win_println(window, THEME_DEFAULT, '!', "available actions:");
+        while (curr) {
+            win_println(window, THEME_DEFAULT, '!', "  %s", curr->data);
+            curr = g_list_next(curr);
+        }
+    }
 }
 
 void

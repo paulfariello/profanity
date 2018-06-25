@@ -1164,7 +1164,7 @@ _command_exec_response_handler(xmpp_stanza_t *const stanza, void *const userdata
 
     const char *status = xmpp_stanza_get_attribute(cmd, STANZA_ATTR_STATUS);
     if (g_strcmp0(status, "completed") == 0) {
-        win_handle_command_exec_status(win, command, "completed");
+        win_handle_command_exec_status(win, command, "completed", NULL);
         xmpp_stanza_t *note = xmpp_stanza_get_child_by_name(cmd, "note");
         if (note) {
             const char *type = xmpp_stanza_get_attribute(note, "type");
@@ -1172,7 +1172,27 @@ _command_exec_response_handler(xmpp_stanza_t *const stanza, void *const userdata
             win_handle_command_exec_result_note(win, type, value);
         }
     } else if (g_strcmp0(status, "executing") == 0) {
-        win_handle_command_exec_status(win, command, "executing");
+        GList *actions = NULL;
+        gboolean cancel_found = true;
+
+        xmpp_stanza_t *actions_stanza = xmpp_stanza_get_child_by_name(cmd, "actions");
+        if (actions_stanza) {
+            xmpp_stanza_t *action = xmpp_stanza_get_children(actions_stanza);
+            while (action) {
+                const char *name = xmpp_stanza_get_name(action);
+                cancel_found |= g_strcmp0(name, (gpointer)"cancel") == 0;
+                actions = g_list_append(actions, (gpointer)name);
+                action = xmpp_stanza_get_next(action);
+            }
+        }
+
+        if (!cancel_found) {
+            /* xep-0050 3.2 The action "cancel" is always allowed */
+            actions = g_list_append(actions, "cancel");
+        }
+
+        win_handle_command_exec_status(win, command, "executing", actions);
+        g_list_free(actions);
 
         /* Looking for a jabber:x:data type form */
         xmpp_stanza_t *x = xmpp_stanza_get_child_by_ns(cmd, STANZA_NS_DATA);
@@ -1194,7 +1214,7 @@ _command_exec_response_handler(xmpp_stanza_t *const stanza, void *const userdata
         ProfConfWin *confwin = (ProfConfWin*)wins_new_config(from, form, iq_submit_command_config, iq_cancel_command_config, data);
         confwin_handle_configuration(confwin, form);
     } else if (g_strcmp0(status, "canceled") == 0) {
-        win_handle_command_exec_status(win, command, "canceled");
+        win_handle_command_exec_status(win, command, "canceled", NULL);
         xmpp_stanza_t *note = xmpp_stanza_get_child_by_name(cmd, "note");
         if (note) {
             const char *type = xmpp_stanza_get_attribute(note, "type");
