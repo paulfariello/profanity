@@ -1900,6 +1900,7 @@ _room_affiliation_list_result_id_handler(xmpp_stanza_t *const stanza, void *cons
         }
     }
 
+    // TODO store jids for OMEMO MUC
     muc_jid_autocomplete_add_all(from, jids);
     ProfMucWin *mucwin = wins_get_muc(from);
     if (mucwin) {
